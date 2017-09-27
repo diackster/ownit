@@ -1,63 +1,45 @@
 pragma solidity ^0.4.8;
-contract Token {
-
-  event Transfer(address indexed from, address indexed to, uint value);
-  event Approval( address indexed owner, address indexed spender, uint value);
-
-  mapping( address => uint ) _balances;
-  mapping( address => mapping( address => uint ) ) _approvals;
-  uint public _supply;
-  function Token( uint initial_balance ) {
-    _balances[msg.sender] = initial_balance;
-    _supply = initial_balance;
-  }
-  function totalSupply() constant returns (uint supply) {
-    return _supply;
-  }
-  function balanceOf( address who ) constant returns (uint value) {
-    return _balances[who];
-  }
-  function transfer( address to, uint value) returns (bool ok) {
-    if( _balances[msg.sender] < value ) {
-      throw;
+contract Property {
+    address public owner;
+    bytes32 public description;
+    uint public pricePerDay;
+    uint public id;
+    enum PropertyStatus {Active, Created, Sold}
+    enum RentalStatus {Free, Booked, Paid, Unavailable}
+    struct RentalDay {
+        RentalStatus rentalStatus;
+        uint price;
     }
-    if( !safeToAdd(_balances[to], value) ) {
-      throw;
+    PropertyStatus status;
+    RentalDay[10][366] rentalCalendar;
+    function Property(address _owner, bytes32 _description, uint _pricePerDay, uint _id) {
+        owner = _owner;
+        description = _description;
+        pricePerDay = _pricePerDay;
+        status = PropertyStatus.Created;
+        id = _id;
     }
-    _balances[msg.sender] -= value;
-    _balances[to] += value;
-    Transfer( msg.sender, to, value );
-    return true;
-  }
-  function transferFrom( address from, address to, uint value) returns (bool ok) {
-    // if you don't have enough balance, throw
-    if( _balances[from] < value ) {
-      throw;
+    function ChangeOwner(address _newOwner) {
+        require(msg.sender == owner);
+        owner = _newOwner;
     }
-    // if you don't have approval, throw
-    if( _approvals[from][msg.sender] < value ) {
-      throw;
+    function GetDescription() constant returns (bytes32){
+        return description;
     }
-    if( !safeToAdd(_balances[to], value) ) {
-      throw;
+}
+contract RentalService {
+    address public controller;
+    function RentalService() {
+        controller = msg.sender;
     }
-    // transfer and return true
-    _approvals[from][msg.sender] -= value;
-    _balances[from] -= value;
-    _balances[to] += value;
-    Transfer( from, to, value );
-    return true;
-  }
-  function approve(address spender, uint value) returns (bool ok) {
-    // TODO: should increase instead
-    _approvals[msg.sender][spender] = value;
-    Approval( msg.sender, spender, value );
-    return true;
-  }
-  function allowance(address owner, address spender) constant returns (uint _allowance) {
-    return _approvals[owner][spender];
-  }
-  function safeToAdd(uint a, uint b) internal returns (bool) {
-    return (a + b >= a);
-  }
+    Property[] propertyList;
+    function AddProperty (address _owner, bytes32 _description, uint _pricePerDay) returns (uint) {
+        uint x = propertyList.length;
+        propertyList.push(new Property(msg.sender, _description, _pricePerDay, x));
+        return x;
+    }
+    function GetPropertyDescriptionById(uint _id) returns (bytes32) {
+        return propertyList[_id].GetDescription();
+    }
+    
 }
