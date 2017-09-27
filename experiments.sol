@@ -11,7 +11,10 @@ contract Property {
         uint price;
     }
     PropertyStatus status;
-    RentalDay[10][366] rentalCalendar;
+    RentalDay[366][10] rentalCalendar;
+    function SetRentalPriceByYearDay(uint _year, uint _day, uint _price) {
+        rentalCalendar[_year][_day].price = _price;
+    }
     function Property(address _owner, bytes32 _description, uint _pricePerDay, uint _id) {
         owner = _owner;
         description = _description;
@@ -41,5 +44,8 @@ contract RentalService {
     function GetPropertyDescriptionById(uint _id) returns (bytes32) {
         return propertyList[_id].GetDescription();
     }
-    
+    function SetPropertyRentalPriceByYearDay(uint _propertyId, uint _year, uint _day, uint _price){
+        require(propertyList[_propertyId].owner() == msg.sender);
+        propertyList[_propertyId].SetRentalPriceByYearDay(_year, _day, _price);
+    }
 }
